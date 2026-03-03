@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from '@google/genai';
-import { Mic, MicOff, Plus, MessageSquare, Image as ImageIcon, Send, Menu, X, Loader2, Volume2 } from 'lucide-react';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import { Mic, MicOff, Plus, MessageSquare, Image as ImageIcon, Send, Menu, X, Loader2, Volume2, LogOut } from 'lucide-react';
 
 type Message = { id: string; role: 'user' | 'model'; text: string; image?: string };
 type Session = { id: string; title: string; messages: Message[] };
 
 export default function App() {
+  const [apiKey, setApiKey] = useState(process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key') || '');
+  const [isApiKeySet, setIsApiKeySet] = useState(!!process.env.GEMINI_API_KEY || !!localStorage.getItem('gemini_api_key'));
   const [sessions, setSessions] = useState<Session[]>([{ id: '1', title: 'নতুন চ্যাট', messages: [] }]);
   const [activeSessionId, setActiveSessionId] = useState('1');
   const [input, setInput] = useState('');
@@ -118,6 +118,7 @@ export default function App() {
       let generatedImage = '';
 
       if (isImageGenRequest) {
+        const ai = new GoogleGenAI({ apiKey });
         const parts: any[] = [{ text }];
         if (currentAttachment) {
           parts.push({ inlineData: { data: currentAttachment.data, mimeType: currentAttachment.mimeType } });
@@ -161,6 +162,7 @@ export default function App() {
           }
         }
 
+        const ai = new GoogleGenAI({ apiKey });
         const result = await ai.models.generateContent({
           model: 'gemini-2.5-flash',
           contents: { parts },
@@ -209,6 +211,41 @@ export default function App() {
     if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
+  if (!isApiKeySet) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50 font-sans p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-sm max-w-md w-full border border-slate-100">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <MessageSquare className="w-8 h-8 text-blue-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-center text-slate-800 mb-2">হৃদয় (Hridoy)</h1>
+          <p className="text-center text-slate-500 mb-6">অনুগ্রহ করে আপনার Gemini API Key প্রদান করুন।</p>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="Enter Gemini API Key"
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all mb-4"
+          />
+          <button
+            onClick={() => {
+              if (apiKey.trim()) {
+                localStorage.setItem('gemini_api_key', apiKey.trim());
+                setIsApiKeySet(true);
+              }
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors"
+          >
+            শুরু করুন
+          </button>
+          <p className="text-xs text-center text-slate-400 mt-4">
+            আপনার API Key শুধুমাত্র আপনার ব্রাউজারেই সেভ থাকবে।
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
       {/* Sidebar Overlay for Mobile */}
@@ -243,6 +280,18 @@ export default function App() {
               <span className="truncate text-sm">{s.title}</span>
             </div>
           ))}
+        </div>
+        <div className="p-4 border-t border-slate-800">
+          <button 
+            onClick={() => {
+              localStorage.removeItem('gemini_api_key');
+              setApiKey('');
+              setIsApiKeySet(false);
+            }} 
+            className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800 py-2 px-4 rounded-lg transition-colors"
+          >
+            <LogOut className="w-4 h-4" /> API Key মুছুন
+          </button>
         </div>
       </div>
 
