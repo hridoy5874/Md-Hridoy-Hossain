@@ -1,0 +1,8 @@
+{
+  "name": "Remix: হৃদয় (Hridoy) - Advanced AI Assistant",
+  "description": "An advanced Bengali voice assistant with continuous listening, image generation, and location awareness.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}
